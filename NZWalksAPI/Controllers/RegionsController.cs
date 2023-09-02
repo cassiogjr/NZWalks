@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using NZWalksAPI.data;
 using NZWalksAPI.Models.Domain;
 using NZWalksAPI.Models.DTO;
+using NZWalksAPI.Models.DTO;
 using System.Reflection.Metadata.Ecma335;
 
 namespace NZWalksAPI.Controllers
@@ -100,11 +101,90 @@ namespace NZWalksAPI.Controllers
 
         dbContext.Regions.Add(regionDomainModel);
         dbContext.SaveChanges();
-   
-        return CreatedAtAction(nameof())
-    }   
+
+            //Map Domain Model
+
+            var regionDto = new RegionDto
+            {
+                Id = regionDomainModel.Id,
+                Code = regionDomainModel.Code,
+                Name = regionDomainModel.Name,
+                ImageUrl = regionDomainModel.ImageUrl,
+            };
 
 
+
+            return CreatedAtAction(nameof(GetById), new { id = regionDomainModel.Id }, regionDomainModel); 
+    }
+
+
+        //Update region
+        //PUT: htpps://localhost:1234/api/regions/{id}
+        [HttpPut]
+        [Route("{id:Guid}")]
+        public IActionResult Update([FromRoute] Guid id, [FromBody] UpdateRegionRequestDto updateRegionRequestDto)
+        {
+            //Checking if the region exist
+            var regionDomainModel = dbContext.Regions.FirstOrDefault(x => x.Id == id);
+
+            if(regionDomainModel == null)
+            {
+                return NotFound();
+                        
+            }
+            //Map DTO to Domain Model
+            regionDomainModel.Code = updateRegionRequestDto.Code;
+            regionDomainModel.Name = updateRegionRequestDto.Name;
+            regionDomainModel.ImageUrl = updateRegionRequestDto.ImageUrl;
+
+            dbContext.SaveChanges();
+
+            //Convert Domain Model to DTO
+
+            var regionDto = new RegionDto
+            {
+                Id = regionDomainModel.Id,
+                Code = regionDomainModel.Code,
+                Name = regionDomainModel.Name,
+                ImageUrl = regionDomainModel.ImageUrl,
+            };
+
+            return Ok(regionDto);
+        }
+
+
+        //Delete region
+        //DELETE: htpps://localhost:1234/api/regions/{id}
+        
+        [HttpDelete]
+        [Route("{id:Guid}")]
+        public IActionResult Delete([FromRoute] Guid id)
+        {
+            // Get Region Domain Model from DataBase
+            var regionDomainModel = dbContext.Regions.FirstOrDefault(x => x.Id == id);
+
+            if (regionDomainModel == null)
+            {
+                return NotFound();
+            }
+
+            //return deleted region back
+            //map Domain Model to DTO
+            var regionDto = new RegionDto
+            {
+                Id = regionDomainModel.Id,
+                Code = regionDomainModel.Code,
+                Name = regionDomainModel.Name,
+                ImageUrl = regionDomainModel.ImageUrl,
+            };
+
+            dbContext.Regions.Remove(regionDomainModel);
+            dbContext.SaveChanges();
+
+            
+
+            return Ok(regionDto);
+        }
     }
 
 }
